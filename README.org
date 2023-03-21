@@ -1,0 +1,1 @@
+* Simple helper functions for GPT-4
