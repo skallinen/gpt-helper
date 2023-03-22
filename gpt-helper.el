@@ -40,7 +40,7 @@
         (payload (json-encode
                   `((model . ,model;"gpt-4";
 			   )
-                    (messages . [((role . "system") (content . "You are a programmer."))
+                    (messages . [((role . "system") (content . "You are a programmer. Communicating in org-mode markup."))
                                  ((role . "user") (content . ,prompt))
                                  ((role . "assistant") (content . "I can try, what is the code?"))
                                  ((role . "user") (content . ,code-selection))])))))
