@@ -1,6 +1,6 @@
 ;;; gpt-helper.el --- Functions to for GPT-4 and GPT-3.5-TURBO (ChatGPT) -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2021 Your Name
+;; Copyright (C) 1710-2023 Sami Kallinen
 
 ;; Author: Sami sakalli Kallinen <notjustsilicon@gmail.com>
 ;; Version: 0.1
@@ -18,32 +18,55 @@
 
 ;;; Code:
 
-(defun my-function ()
-  "Print a message to the *Messages* buffer."
-  (message "Hello, world!"))
-
 (require 'json)
 (require 'request)
 
+;;(setf lexical-binding t)
 
 (defun getenv-or-default (name default)
   (or (getenv name) default))
-;;(setf lexical-binding t)
 
 (defvar open-ai-key (getenv-or-default "OPENAI_API_KEY" ""))
 
-(defun programmer-prompt (model prompt code-selection callback)
-  (print callback)
+(defun ;selection-prompt (model system prompt code-selection callback)
+    (let ((url "https://api.openai.com/v1/chat/completions")
+          (headers `(("Content-Type" . "application/json")
+                     ("Authorization" . ,(concat "Bearer " open-ai-key))))
+          (payload (json-encode
+                    `((model . ,model;"gpt-4";
+			     )
+                      (messages . [((role . "system") (content . ,system))
+                                   ((role . "user") (content . ,prompt))
+                                   ((role . "assistant") (content . "I can try to help, what is the text or code?"))
+                                   ((role . "user") (content . ,code-selection))])))))
+      (request url
+	:type "POST"
+	:headers headers
+	:data payload
+	:sync nil
+	:parser 'json-read
+	:success (cl-function
+                  (lambda (&key data &allow-other-keys)
+                    (let* ((choices (cdr (assoc 'choices data)))
+                           (first-choice (elt choices 0))
+                           (message (cdr (assoc 'message first-choice)))
+                           (content (cdr (assoc 'content message))))
+                      (funcall callback content))))
+	:error (cl-function
+		(lambda (&key error-thrown &allow-other-keys)
+                  (message "Error calling GPT API: %S" error-thrown)))))
+    
+    (message "GPT API call triggered"))
+
+(defun general-prompt (model system prompt callback)
   (let ((url "https://api.openai.com/v1/chat/completions")
         (headers `(("Content-Type" . "application/json")
                    ("Authorization" . ,(concat "Bearer " open-ai-key))))
         (payload (json-encode
-                  `((model . ,model;"gpt-4";
+                  `((model . ,model	;"gpt-4";
 			   )
-                    (messages . [((role . "system") (content . "You are a programmer. Communicating in org-mode markup."))
-                                 ((role . "user") (content . ,prompt))
-                                 ((role . "assistant") (content . "I can try, what is the code?"))
-                                 ((role . "user") (content . ,code-selection))])))))
+		    (messages . [((role . "system") (content . ,system))
+                                 ((role . "user") (content . ,(concat "How do I " prompt)))])))))
     (request url
       :type "POST"
       :headers headers
@@ -59,9 +82,12 @@
                     (funcall callback content))))
       :error (cl-function
               (lambda (&key error-thrown &allow-other-keys)
-                (message "Error calling GPT API: %S" error-thrown)))))
+                (message "Error calling GPT API: %S" error-thrown))))
+    )
   
   (message "GPT API call triggered"))
+
+
 
 (defun get-prompt ()
   (read-from-minibuffer "Enter the prompt: "))
@@ -80,7 +106,8 @@
   (with-current-buffer (get-buffer-create "*GPT-3.5/4 Output*")
     (setq buffer-read-only nil)
     (goto-char (point-max))
-    (insert (concat "\n" content "\n"))
+    (insert (concat "\n" content "\n"
+		    (make-string 80 ?-) "\n\n"))
     (local-set-key "q" 'kill-buffer-and-window)
     (setq buffer-read-only t)
     (display-buffer (current-buffer)))
@@ -88,24 +115,73 @@
     (kill-new content))
   (message "GPT call ready. Result also saved in kill ring"))
 
-(defun gpt-4-interactive ()
+(defun gpt-4-programmer-region ()
   (interactive)
   (let ((prompt (get-prompt))
 	(code-selection (get-code-selection)))
-    (programmer-prompt "gpt-4"
-		       prompt
-		       code-selection
-		       #'display-gpt-response)))
+    (selection-prompt "gpt-4"
+		      "You are a programmer."
+		      prompt
+		      code-selection
+		      #'display-gpt-response)))
 
-(defun chat-gpt-interactive ()
+(defun chat-gpt-programmer-region ()
   (interactive)
   (let ((prompt (get-prompt))
 	(code-selection (get-code-selection)))
-    (programmer-prompt "gpt-3.5-turbo"
-		       prompt
-		       code-selection
-		       #'display-gpt-response)))
+    (selection-prompt "gpt-3.5-turbo"
+		      "You are a programmer."
+		      prompt
+		      code-selection
+		      #'display-gpt-response)))
+
+(defun chat-gpt-assistant-region ()
+  (interactive)
+  (let ((prompt (get-prompt))
+	(code-selection (get-code-selection)))
+    (selection-prompt "gpt-3.5-turbo"
+		      "You are an all around assistant!"
+		      prompt
+		      code-selection
+		      #'display-gpt-response)))
+
+(defun gpt-4-assistant-region ()
+  (interactive)
+  (let ((prompt (get-prompt))
+	(code-selection (get-code-selection)))
+    (selection-prompt "gpt-3.5-turbo"
+                      "You are an all around assistant!"
+		      prompt
+		      code-selection
+		      #'display-gpt-response)))
+
+(defun emacs-how-do-i ()
+  (interactive)
+  (let ((prompt (get-prompt)))
+    (general-prompt "gpt-3.5-turbo"
+		    "You are an emacs tutor."
+		    prompt
+		    #'display-gpt-response)))
+
+
+(defun gpt-3-assistant ()
+  (interactive)
+  (let ((prompt (get-prompt)))
+    (general-prompt "gpt-3.5-turbo"
+		    "You are an all around assistant!"
+		    prompt
+		    #'display-gpt-response)))
+
+
+(defun gpt-4-assistant ()
+  (interactive)
+  (let ((prompt (get-prompt)))
+    (general-prompt "gpt-4"
+		    "You are an all around assistant!"
+		    prompt
+		    #'display-gpt-response)))
 
 (provide 'gpt-helper)
 
 ;;; gpt-helper.el ends here
+g
