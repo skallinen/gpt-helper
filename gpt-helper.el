@@ -64,23 +64,13 @@
 	    (lambda (&key error-thrown &allow-other-keys)
 	      (message "Error calling GPT API: %S" error-thrown)))))
 
-(defun request-gpt-response (url headers payload callback)
-  (request url
-    :type "POST"
-    :headers headers
-    :data payload
-    :sync nil
-    :parser 'json-read
-    :success (cl-function
-	      (lambda (&key data &allow-other-keys)
-		(let* ((choices (cdr (assoc 'choices data)))
-		       (first-choice (elt choices 0))
-		       (message (cdr (assoc 'message first-choice)))
-		       (content (cdr (assoc 'content message))))
-		  (funcall callback content))))
-    :error (cl-function
-	    (lambda (&key error-thrown &allow-other-keys)
-	      (message "Error calling GPT API: %S" error-thrown)))))
+(defun gpt-request (model system prompt code-selection callback)
+  "Sends a request to GPT API with the given MODEL, SYSTEM, PROMPT, and CODE-SELECTION."
+  (let ((url (build-api-url))
+        (headers (build-headers))
+        (payload (build-payload model system prompt code-selection)))
+    (request-gpt-response url headers payload callback)))
+
 
 (defun get-prompt ()
   (read-from-minibuffer "Enter the prompt: "))
