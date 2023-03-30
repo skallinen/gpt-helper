@@ -70,9 +70,7 @@
   (let ((url (build-api-url))
         (headers (build-headers))
         (payload (build-payload model system prompt code-selection)))
-    (request-gpt-response url headers payload callback)))
-
-
+    (request-gpt-response url headers payload (lambda (content) (funcall callback content prompt)))))
 (defun get-prompt ()
   (read-from-minibuffer "Enter the prompt: "))
 
@@ -84,7 +82,7 @@
               "```")
     ""))
 
-(defun display-gpt-response (content)
+(defun display-gpt-response (content prompt)
   "Designed to display the output of a GPT-3.5/4 call in a
   user-friendly way and provide an easy way to copy the output to the
   clipboard."
@@ -92,8 +90,11 @@
   (with-current-buffer (get-buffer-create "*GPT-3.5/4 Output*")
     (setq buffer-read-only nil)
     (goto-char (point-max))
-    (insert (concat "\n" content "\n"
-		    (make-string 80 ?-) "\n\n"))
+    (insert (concat "\n" "Prompt: "
+	        prompt "\n"
+	        (make-string 10 ?-)
+		    "\n\n" content "\n"
+			(make-string 80 ?-) "\n\n"))
     (local-set-key "q" 'kill-buffer-and-window)
     (display-buffer (current-buffer))
     ;; Enable markdown-mode for better formatting of the GPT response content
