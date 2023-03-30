@@ -11,7 +11,7 @@
 ;; URL: https://github.com/skallinen/gpt-helper
 ;;; Commentary:
 ;;
-;; This is a minal collection of functions to help doing GPT calls in
+;; This is a minimal collection of functions to help with making GPT calls in
 ;; emacs. You will need an account on Open AI and add your key to
 ;; `OPENAI_API_KEY` env variable it prints result into a GPT buffer
 ;; and you can choose between ChatGPT and GPT-4 models.
@@ -59,7 +59,8 @@
 		       (first-choice (elt choices 0))
 		       (message (cdr (assoc 'message first-choice)))
 		       (content (cdr (assoc 'content message))))
-		  (funcall callback content))))
+		  (funcall callback content)
+		  (message "Request has been sent to OPEN AI API, waiting for a response..."))))
     :error (cl-function
 	    (lambda (&key error-thrown &allow-other-keys)
 	      (message "Error calling GPT API: %S" error-thrown)))))
@@ -94,16 +95,18 @@
     (insert (concat "\n" content "\n"
 		    (make-string 80 ?-) "\n\n"))
     (local-set-key "q" 'kill-buffer-and-window)
-    (setq buffer-read-only t)
     (display-buffer (current-buffer))
+    ;; Enable markdown-mode for better formatting of the GPT response content
     (markdown-mode)
+    (setq buffer-read-only t)
     (when (and content (not (string-empty-p content)))
       (with-temp-buffer
         (insert content)
         (kill-ring-save (point-min) (point-max)))
-      (message "GPT call refady. Result also saved in kill ring"))))
+      (message "GPT call ready. Result also saved in kill ring"))))
 
 (defmacro define-gpt-call-function (name model system)
+  "Create an interactive GPT request function with the given NAME, MODEL, and SYSTEM."
   `(defun ,name ()
      (interactive)
      (let ((prompt (get-prompt))
