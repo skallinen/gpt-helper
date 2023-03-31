@@ -71,6 +71,7 @@
         (headers (build-headers))
         (payload (build-payload model system prompt code-selection)))
     (request-gpt-response url headers payload (lambda (content) (funcall callback content prompt)))))
+
 (defun get-prompt ()
   (read-from-minibuffer "Enter the prompt: "))
 
