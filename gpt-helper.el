@@ -20,7 +20,7 @@
 
 (require 'json)
 (require 'request)
-
+(require 'cl-lib)
 ;;(setf lexical-binding t)
 
 (defun getenv-or-default (name default)
@@ -91,21 +91,23 @@
   (with-current-buffer (get-buffer-create "*GPT-3.5/4 Output*")
     (setq buffer-read-only nil)
     (goto-char (point-max))
-    (insert (concat "\n" "Prompt: "
-	        prompt "\n"
-	        (make-string 10 ?-)
-		    "\n\n" content "\n"
-			(make-string 80 ?-) "\n\n"))
-    (local-set-key "q" 'kill-buffer-and-window)
-    (display-buffer (current-buffer))
-    ;; Enable markdown-mode for better formatting of the GPT response content
-    (markdown-mode)
-    (setq buffer-read-only t)
-    (when (and content (not (string-empty-p content)))
-      (with-temp-buffer
-        (insert content)
-        (kill-ring-save (point-min) (point-max)))
-      (message "GPT call ready. Result also saved in kill ring"))))
+    (let ((start-pos (point)))
+      (insert (concat "\n" "Prompt: "
+	              prompt "\n"
+	              (make-string 10 ?-) "\n\n"
+		      content "\n"
+		      (make-string 80 ?-) "\n\n"))
+      (local-set-key "q" 'kill-buffer-and-window)
+      (display-buffer (current-buffer))
+      ;; Enable markdown-mode for better formatting of the GPT response content
+      (markdown-mode)
+      (setq buffer-read-only t)
+      (when (and content (not (string-empty-p content)))
+        (with-temp-buffer
+          (insert content)
+          (kill-ring-save (point-min) (point-max)))
+        (message "GPT call ready. Result also saved in kill ring")))))
+
 
 (defmacro define-gpt-call-function (name model system)
   "Create an interactive GPT request function with the given NAME, MODEL, and SYSTEM."
@@ -115,13 +117,110 @@
            (code-selection (get-region)))
        (gpt-request ,model ,system prompt code-selection #'display-gpt-response))))
 
-(define-gpt-call-function gpt-4-programmer-region "gpt-4" "You are a programmer.")
-(define-gpt-call-function chat-gpt-programmer-region "gpt-3.5-turbo" "You are a programmer.")
-(define-gpt-call-function chat-gpt-assistant-region "gpt-3.5-turbo" "You are an all-around assistant!")
-(define-gpt-call-function gpt-4-assistant-region "gpt-4" "You are an all-around assistant!")
+(define-gpt-call-function gpt-smarter-programmer-region "gpt-4" "You are a programmer.")
+(define-gpt-call-function gpt-faster-programmer-region "gpt-3.5-turbo" "You are a programmer.")
+(define-gpt-call-function gpt-faster-assistant-region "gpt-3.5-turbo" "You are an all-around assistant!")
+(define-gpt-call-function gpt-smarter-assistant-region "gpt-4" "You are an all-around assistant!")
 (define-gpt-call-function emacs-how-do-i "gpt-3.5-turbo" "You are an Emacs tutor.")
-(define-gpt-call-function gpt-3-general "gpt-3.5-turbo" "You are an all-around assistant!")
-(define-gpt-call-function gpt-4-general "gpt-4" "You are an all-around assistant!")
+(define-gpt-call-function gpt-faster-general "gpt-3.5-turbo" "You are an all-around assistant!")
+(define-gpt-call-function gpt-smarter-general "gpt-4" "You are an all-around assistant!")
+
+(defun replace-gpt-region (text)
+  "Replace the currently selected region with the response TEXT."
+  (when (region-active-p)
+    (delete-region (region-beginning) (region-end))
+    (insert text)))
+
+(defun gpt-process-region (model role instruction)
+  (let ((code-selection (buffer-substring-no-properties (region-beginning) (region-end))))
+    (gpt-request model
+                 (concat "You are an AI " role)
+                 (concat instruction ", only return the output without explanations and do not add quotes around your response:")
+                 code-selection
+                 (lambda (content prompt)
+                   (display-gpt-response content prompt)
+                   (replace-gpt-region content)))))
+
+(defun gpt-faster-process-region-to-eng ()
+  (interactive)
+  (gpt-process-region "gpt-3.5-turbo" "translator to English" "Translate the following"))
+
+(defun gpt-faster-process-region-to-swe ()
+  (interactive)
+  (gpt-process-region "gpt-3.5-turbo" "translator to Swedish" "Translate the following"))
+
+(defun gpt-faster-process-region-to-fi ()
+  (interactive)
+  (gpt-process-region "gpt-3.5-turbo" "translator to Finnish" "Translate the following"))
+
+(defun gpt-faster-correct-region-to-idiomatic-english ()
+  (interactive)
+  (gpt-process-region "gpt-3.5-turbo" "copyrwriter and editor" "Correct the following to idiomatic English"))
+
+(defun gpt-smarter-correct-region-to-idiomatic-english ()
+  (interactive)
+  (gpt-process-region "gpt-smarter-turbo" "copyrwriter and editor" "Correct the following to idiomatic English"))
+
+(defun gpt-faster-insert-docstring ()
+  (interactive)
+  (gpt-process-region "gpt-3.5-turbo" "programmer" "Return the function verbatim, but insert a concise and clear docstring fort the function"))
+
+(defun gpt-smarter-insert-docstring ()
+  (interactive)
+  (gpt-process-region "gpt-4" "programmer" "Return the function verbatim, but insert a concise and clear docstring for the function"))
+
+(defun gpt-predefined-region-questions (model role instruction)
+  (let ((code-selection (buffer-substring-no-properties (region-beginning) (region-end))))
+    (gpt-request model
+                 (concat "You are an AI " role)
+                 instruction
+                 code-selection
+                 (lambda (content prompt)
+                   (display-gpt-response content prompt)))))
+
+(defun gpt-faster-explain-like-i-was-13 ()
+  (interactive)
+  (gpt-predefined-region-questions "gpt-3.5-turbo" "that is good at explaining" "Explain the following like I was 13 year old"))
+
+(defun gpt-smarter-explain-like-i-was-13 ()
+  (interactive)
+  (gpt-predefined-region-questions "gpt-4" "that is good at explaining" "Explain the following like I was 13 year old"))
+
+(defun gpt-smarter-explain-code ()
+  (interactive)
+  (gpt-predefined-region-questions "gpt-4" "programmer that can verbalizbize well" "Explain the following code"))
+
+(defun gpt-smarter-improve-code ()
+  (interactive)
+  (gpt-predefined-region-questions "gpt-4" "programmer that can verbalizbize well" "Improve the follwoing code"))
+
+(defun gpt-faster-translate-to-eng-in-buffer ()
+  (interactive)
+  (gpt-predefined-region-questions "gpt-3.5-turbo" "English translator" "Translate the following to english"))
+
+(defun gpt-smarter-translate-to-eng-in-buffer ()
+  (interactive)
+  (gpt-predefined-region-questions "gpt-4" "English translator" "Translate the following to english"))
+
+(global-set-key (kbd "C-c C-g C-g") 'gpt-smarter-general)
+(global-set-key (kbd "C-c C-g C-S-g") 'gpt-faster-general)
+(global-set-key (kbd "C-c C-g C-p") 'gpt-smarter-programmer-region)
+(global-set-key (kbd "C-c C-g C-S-p") 'gpt-faster-programmer-region)
+(global-set-key (kbd "C-c C-g C-a") 'gpt-smarter-assistant-region)
+(global-set-key (kbd "C-c C-g C-S-a") 'gpt-faster-assistant-region)
+(global-set-key (kbd "C-c C-g C-e") 'gpt-faster-process-region-to-eng)
+(global-set-key (kbd "C-c C-g C-s") 'gpt-faster-process-region-to-swe)
+(global-set-key (kbd "C-c C-g C-f") 'gpt-faster-process-region-to-fi)
+(global-set-key (kbd "C-c C-g C-t") 'gpt-faster-translate-to-eng-in-buffer)
+(global-set-key (kbd "C-c C-g C-S-t") 'gpt-smarter-translate-to-eng-in-buffer)
+(global-set-key (kbd "C-c C-g C-x") 'gpt-faster-explain-like-i-was-13)
+(global-set-key (kbd "C-c C-g C-S-x") 'gpt-smarter-explain-like-i-was-13)
+(global-set-key (kbd "C-c C-g C-n") 'gpt-faster-correct-region-to-idiomatic-english)
+(global-set-key (kbd "C-c C-g C-S-n") 'gpt-smarter-correct-region-to-idiomatic-english)
+(global-set-key (kbd "C-c C-g C-S-c") 'gpt-smarter-explain-code)
+(global-set-key (kbd "C-c C-g C-S-b") 'gpt-smarter-improve-code)
+(global-set-key (kbd "C-c C-g C-d") 'gpt-faster-insert-docstring)
+(global-set-key (kbd "C-c C-g C-S-d") 'gpt-smarter-insert-docstring)
 
 (provide 'gpt-helper)
 
