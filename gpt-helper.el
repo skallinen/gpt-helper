@@ -21,7 +21,7 @@
 (require 'json)
 (require 'request)
 (require 'cl-lib)
-Ö;;(setf lexical-binding t)
+;;(setf lexical-binding t)
 
 (defun getenv-or-default (name default)
   (or (getenv name) default))
