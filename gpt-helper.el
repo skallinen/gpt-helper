@@ -175,7 +175,7 @@
   (interactive)
   (gpt-request "programmer" nil nil nil nil))
 
-(global-set-key (kbd "C-c C-g C-p C-p") 'gpt-programmer)
+(global-set-key (kbd "C-c C-g C-S-p") 'gpt-programmer)
 
 
 
@@ -189,7 +189,7 @@
   (interactive)
   (gpt-request "assistant" nil nil nil nil))
 
-(global-set-key (kbd "C-c C-g C-a C-a") 'gpt-assistant)
+(global-set-key (kbd "C-c C-g C-S-a") 'gpt-assistant)
 
 
 
@@ -218,31 +218,11 @@
 
 (global-set-key (kbd "C-c C-g C-t") 'gpt-to-idiomatic-english)
 
-
-
-;; (global-set-key (kbd "C-c C-g C-s") 'gpt-smarter-general)
-;; (global-set-key (kbd "C-c C-g C-f") 'gpt-faster-general)
-;; (global-set-key (kbd "C-c C-g C-a C-s") 'gpt-smarter-assistant-region)
-;; (global-set-key (kbd "C-c C-g C-a C-f") 'gpt-faster-assistant-region)
-;; (global-set-key (kbd "C-c C-g C-t C-e") 'gpt-faster-process-region-to-eng)
-;; (global-set-key (kbd "C-c C-g C-t C-s") 'gpt-faster-process-region-to-swe)
-;; (global-set-key (kbd "C-c C-g C-t C-f") 'gpt-faster-process-region-to-fi)
-;; (global-set-key (kbd "C-c C-g C-b C-e C-f") 'gpt-faster-translate-to-eng-in-buffer)
-;; (global-set-key (kbd "C-c C-g C-b C-e C-s") 'gpt-smarter-translate-to-eng-in-buffer)
-;; (global-set-key (kbd "C-c C-g C-x C-f") 'gpt-faster-explain-like-i-was-13)
-;; (global-set-key (kbd "C-c C-g C-x C-s") 'gpt-smarter-explain-like-i-was-13)
-;; (global-set-key (kbd "C-c C-g C-d C-e C-f") 'gpt-faster-correct-region-to-idiomatic-english)
-;; (global-set-key (kbd "C-c C-g C-d C-e C-s") 'gpt-smarter-correct-region-to-idiomatic-english)
-;; (global-set-key (kbd "C-c C-g C-d C-f C-f") 'gpt-faster-correct-region-to-idiomatic-finnish)
-;; (global-set-key (kbd "C-c C-g C-d C-f C-s") 'gpt-smarter-correct-region-to-idiomatic-finnish)
-;; (global-set-key (kbd "C-c C-g C-d C-s C-f") 'gpt-faster-correct-region-to-idiomatic-swedish)
-;; (global-set-key (kbd "C-c C-g C-d C-s C-s") 'gpt-smarter-correct-region-to-idiomatic-swedish)
-;; (global-set-key (kbd "C-c C-g C-c C-s") 'gpt-smarter-programmer-region)
-;; (global-set-key (kbd "C-c C-g C-c C-f") 'gpt-faster-programmer-region)
-;; (global-set-key (kbd "C-c C-g C-c C-e ") 'gpt-smarter-explain-code)
-;; (global-set-key (kbd "C-c C-g C-c C-i") 'gpt-smarter-improve-code)
-;; (global-set-key (kbd "C-c C-g C-c C-d C-f") 'gpt-faster-insert-docstring)
-;; (global-set-key (kbd "C-c C-g C-c C-d C-s") 'gpt-smarter-insert-docstring)
+;; todo
+;; 'gpt-smarter-explain-like-i-was-13
+;; 'gpt-smarter-explain-code
+;; 'gpt-smarter-improve-code
+;; 'gpt-smarter-insert-docstring
 
 (add-hook 'markdown-mode-hook 'visual-line-mode)
 
