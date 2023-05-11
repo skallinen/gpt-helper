@@ -164,20 +164,7 @@
 				(show-gpt-completion-message)))))))
 
 
-
-(defun gpt-programmer-default ()
-  (interactive)
-  (gpt-request "programmer" nil nil :dont-replace "gpt-4"))
-
-(global-set-key (kbd "C-c C-g C-p") 'gpt-programmer-default)
-
-(defun gpt-programmer ()
-  (interactive)
-  (gpt-request "programmer" nil nil nil nil))
-
-(global-set-key (kbd "C-c C-g C-S-p") 'gpt-programmer)
-
-
+;; templates general
 
 (defun gpt-assistant-default ()
   (interactive)
@@ -191,7 +178,53 @@
 
 (global-set-key (kbd "C-c C-g C-S-a") 'gpt-assistant)
 
+(defun gpt-explain-simple ()
+  (interactive)
+  (gpt-request "smart person" "Explain the followin to me like i was 13 year old" nil :dont-replace "gpt-3.5-turbo"))
 
+(global-set-key (kbd "C-c C-g C-x") 'gpt-code-explain-simple)
+
+(defun gpt-code-explain-complex ()
+  (interactive)
+  (gpt-request "smart person" "Explain the following" nil :dont-replace "gpt-4"))
+
+(global-set-key (kbd "C-c C-g C-X") 'gpt-code-explain-complex)
+
+
+;; templates programming
+
+(defun gpt-programmer-default ()
+  (interactive)
+  (gpt-request "programmer" nil nil :dont-replace "gpt-4"))
+
+(global-set-key (kbd "C-c C-g C-p") 'gpt-programmer-default)
+
+(defun gpt-programmer ()
+  (interactive)
+  (gpt-request "programmer" nil nil nil nil))
+
+(global-set-key (kbd "C-c C-g C-S-p") 'gpt-programmer)
+
+(defun gpt-code-explain-simple ()
+  (interactive)
+  (gpt-request "programmer" "Explain the followin to me like i was 13 year old" nil :dont-replace "gpt-3.5-turbo"))
+
+(global-set-key (kbd "C-c C-g C-c C-x") 'gpt-code-explain-simple)
+
+(defun gpt-code-explain-complex ()
+  (interactive)
+  (gpt-request "programmer" "Explain the following" nil :dont-replace "gpt-4"))
+
+(global-set-key (kbd "C-c C-g C-c C-X") 'gpt-code-explain-complex)
+
+(defun gpt-code-docstring-complex ()
+  (interactive)
+  (gpt-request "programmer" "Analyze this code, keep it as is but add docstring/s to the functions" nil :dont-replace "gpt-4"))
+
+(global-set-key (kbd "C-c C-g C-c C-d") 'gpt-code-explain-complex)
+
+
+;; templates languages
 
 (defun gpt-to-idiomatic-english ()
   (interactive)
@@ -217,12 +250,6 @@
   (gpt-request "copy editor and translator" "Correct and or translate the following to idiomatic English, plsease respons without context. do not wrap in quotes" nil nil "gpt-3.5-turbo"))
 
 (global-set-key (kbd "C-c C-g C-t") 'gpt-to-idiomatic-english)
-
-;; todo
-;; 'gpt-smarter-explain-like-i-was-13
-;; 'gpt-smarter-explain-code
-;; 'gpt-smarter-improve-code
-;; 'gpt-smarter-insert-docstring
 
 (add-hook 'markdown-mode-hook 'visual-line-mode)
 
